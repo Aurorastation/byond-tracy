@@ -18,6 +18,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install packages
+      run: sudo apt-get install gcc-multilib g++-multilib
+
     - name: Build Linux (GCC)
       run: gcc -std=c11 -m32 -shared -fPIC -Ofast -s -DNDEBUG prof.c -pthread -o libprof.so
 
@@ -30,7 +33,7 @@ jobs:
         if-no-files-found: error
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
 
     strategy:
       fail-fast: false
@@ -38,12 +41,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - uses: msys2/setup-msys2@v2
+      - name: Set up Clang
+        uses: egor-tensin/setup-clang@v1
         with:
-          msystem: CLANG32
-      - shell: msys2 {0}
-        run: |
-          clang.exe -std=c11 -m32 -shared -Ofast3 -DNDEBUG -fuse-ld=lld-link prof.c -lws2_32 -o tracy.dll
+          version: latest
+          platform: i686
+          
+      - name: Compile
+        run: clang -std=c11 -m32 -shared -Ofast3 -DNDEBUG -fuse-ld=lld-link prof.c -lws2_32 -o tracy.dll
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.3
